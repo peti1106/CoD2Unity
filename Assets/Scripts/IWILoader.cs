@@ -159,7 +159,10 @@ namespace Potion
 
         IWILoader iwiLoader;
 
-        public MaterialCreator() {
+        Material defaultMaterial;
+
+        public MaterialCreator(Material defaultMaterial) {
+            this.defaultMaterial = defaultMaterial;
             iwiLoader = new IWILoader();
         }
 
@@ -185,7 +188,7 @@ namespace Potion
 
             Texture2D tex = iwiLoader.CreateTexture(textureName);
 
-            Material ret = new Material( Resources.Load<Material>("main/Default") );
+            Material ret = new Material(defaultMaterial);
             ret.mainTexture = tex;
 
             return ret;

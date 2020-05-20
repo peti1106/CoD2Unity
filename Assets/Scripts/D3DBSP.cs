@@ -84,6 +84,8 @@ namespace Potion {
     public class D3DBSP : MonoBehaviour {
         public GameObject root;
 
+        public Material defaultMaterial;
+
         Dictionary<int, string> lumpNames;
 
         List<Lump> lumps;
@@ -146,7 +148,7 @@ namespace Potion {
             triangles = new List<Triangle>();
             triangleSoups = new List<TriangleSoup>();
 
-            materialCreator = new MaterialCreator();
+            materialCreator = new MaterialCreator(defaultMaterial);
 
             using (fs = new FileStream(Utils.CoD2Path + "main\\maps\\mp\\mp_carentan.d3dbsp", FileMode.Open, FileAccess.Read)) {
                 using (br = new BinaryReader(fs, new ASCIIEncoding())) {
