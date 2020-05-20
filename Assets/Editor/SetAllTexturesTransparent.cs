@@ -7,7 +7,7 @@ public class SetAllTexturesTransparent : AssetPostprocessor
 
         if( assetPath.Contains( "images" ) ) {
             TextureImporter importer = assetImporter as TextureImporter;
-            importer.textureType = TextureImporterType.Image;
+            importer.textureType = TextureImporterType.Default;
             importer.textureFormat = TextureImporterFormat.RGBA32;
             importer.alphaIsTransparency = true;
             importer.isReadable = true;
@@ -18,7 +18,7 @@ public class SetAllTexturesTransparent : AssetPostprocessor
             if( asset ) {
                 EditorUtility.SetDirty( asset );
             } else {
-                importer.textureType = TextureImporterType.Advanced;
+                importer.textureType = TextureImporterType.Default;
             }
         }
     }

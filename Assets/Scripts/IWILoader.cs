@@ -199,7 +199,7 @@ namespace Potion
 
             Texture2D tex = iwiLoader.CreateTexture( textureName );
 
-            Material ret = new Material( Resources.Load<Material>("main") );
+            Material ret = new Material( Resources.Load<Material>("main/Default") );
             ret.mainTexture = tex;
 
             return ret;

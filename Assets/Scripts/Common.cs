@@ -4,7 +4,7 @@ namespace Potion
 {
     public static class Utils
     {
-        public static string CoD2Path = "C:\\Program Files (x86)\\Activision\\Call of Duty 2\\";
+        public static string CoD2Path = "Assets\\Resources\\";
 
         public static string ReadStringTerminated( this BinaryReader br, byte terminatingChar = 0x00 ) 
         {
