@@ -10,15 +10,13 @@ namespace Potion
 {
     public class IWILoader
     {
-        enum Usage
-        {
+        enum Usage {
             Color = 0x00,
             Default = 0x01, // Fallback texture for engine
             Skybox = 0x05,
         }
 
-        enum Format
-        {
+        enum Format {
             ARGB32 = 0x01,
             RGB24 = 0x02,
             GA16 = 0x03,
@@ -28,8 +26,7 @@ namespace Potion
             DXT5 = 0x0D
         }
 
-        struct STexture
-        {
+        struct STexture {
             public string name;
             public ushort width, height;
 
@@ -52,16 +49,15 @@ namespace Potion
 
         STexture currentTexture;
 
-        public Texture2D CreateTexture( string textureName ) 
-        {
+        public Texture2D CreateTexture(string textureName) {
             currentTexture = new STexture();
             currentTexture.name = textureName;
 
             Texture2D ret = null;
 
-            using( fs = new FileStream( Utils.CoD2Path + "main\\images\\" + textureName + ".iwi", FileMode.Open, FileAccess.Read ) ) {
-                using( br = new BinaryReader( fs, new ASCIIEncoding() ) ) {
-                    if( fs.CanRead )
+            using (fs = new FileStream(Utils.CoD2Path + "main\\images\\" + textureName + ".iwi", FileMode.Open, FileAccess.Read)) {
+                using (br = new BinaryReader(fs, new ASCIIEncoding())) {
+                    if (fs.CanRead)
                         ret = StartReading();
                 }
             }
@@ -69,13 +65,12 @@ namespace Potion
             return ret;
         }
 
-        private Texture2D StartReading() 
-        {
-            br.BaseStream.Seek( 0, SeekOrigin.Begin );
+        private Texture2D StartReading() {
+            br.BaseStream.Seek(0, SeekOrigin.Begin);
             string ident = GetHeaderIdentifier(); // IWi5
 
-            if( ident != "IWi5" )
-                throw new Exception( "File is not of a valid type. Needs to be IWi v5" );
+            if (ident != "IWi5")
+                throw new Exception("File is not of a valid type. Needs to be IWi v5");
 
             ReadHeader();
             SetRawTextureData();
@@ -83,24 +78,22 @@ namespace Potion
             return ConstructUnityTextureFromIWI();
         }
 
-        string GetHeaderIdentifier() 
-        {
+        string GetHeaderIdentifier() {
             byte[] chunk;
-            chunk = br.ReadBytes( 4 );
+            chunk = br.ReadBytes(4);
 
             StringBuilder ident = new StringBuilder();
 
-            for( int i = 0; i < 3; i++ ) {
-                ident.Append( (char) chunk[i] );
+            for (int i = 0; i < 3; i++) {
+                ident.Append((char) chunk[i]);
             }
-            ident.Append( (int) chunk[3] );
+            ident.Append((int) chunk[3]);
 
             return ident.ToString();
         }
 
-        private void ReadHeader() 
-        {
-            br.BaseStream.Seek( 4, SeekOrigin.Begin ); // Skip identifier (4 DWORDs)
+        private void ReadHeader() {
+            br.BaseStream.Seek(4, SeekOrigin.Begin); // Skip identifier (4 DWORDs)
 
             currentTexture.format = (Format) br.ReadByte();
             currentTexture.usage = (Usage) br.ReadByte();
@@ -108,7 +101,7 @@ namespace Potion
             currentTexture.width = br.ReadUInt16();
             currentTexture.height = br.ReadUInt16();
 
-            br.BaseStream.Seek( 2, SeekOrigin.Current ); // Skip unknown data
+            br.BaseStream.Seek(2, SeekOrigin.Current); // Skip unknown data
 
             currentTexture.fileSize = br.ReadUInt32();
 
@@ -116,26 +109,24 @@ namespace Potion
             currentTexture.mipMap1Offset = br.ReadUInt32();
             currentTexture.mipMap2Offset = br.ReadUInt32();
 
-            if( currentTexture.textureOffset == currentTexture.mipMap1Offset ) {
+            if (currentTexture.textureOffset == currentTexture.mipMap1Offset) {
                 currentTexture.mipMapped = true;
             } else {
                 currentTexture.mipMapped = false;
             }
         }
 
-        private void SetRawTextureData() 
-        {
-            br.BaseStream.Seek( currentTexture.textureOffset, SeekOrigin.Begin );
+        private void SetRawTextureData() {
+            br.BaseStream.Seek(currentTexture.textureOffset, SeekOrigin.Begin);
 
-            byte[] texData = br.ReadBytes( (int) ( currentTexture.fileSize - currentTexture.textureOffset ) );
-            currentTexture.rawTextureData = new List<byte>( texData );
+            byte[] texData = br.ReadBytes((int) (currentTexture.fileSize - currentTexture.textureOffset));
+            currentTexture.rawTextureData = new List<byte>(texData);
         }
 
-        private Texture2D ConstructUnityTextureFromIWI() 
-        {
+        private Texture2D ConstructUnityTextureFromIWI() {
             TextureFormat f = TextureFormat.DXT5;
 
-            switch( currentTexture.format ) {
+            switch(currentTexture.format) {
                 case Format.DXT1:
                     f = TextureFormat.DXT1;
                     break;
@@ -153,8 +144,8 @@ namespace Potion
                     break;
             }
 
-            Texture2D ret = new Texture2D( currentTexture.width, currentTexture.height, f, /*currentTexture.mipMapped*/false );
-            ret.LoadRawTextureData( currentTexture.rawTextureData.ToArray() );
+            Texture2D ret = new Texture2D(currentTexture.width, currentTexture.height, f, /*currentTexture.mipMapped*/false);
+            ret.LoadRawTextureData(currentTexture.rawTextureData.ToArray());
 
             ret.Apply();
 
@@ -162,8 +153,7 @@ namespace Potion
         }
     }
 
-    public class MaterialCreator
-    {
+    public class MaterialCreator {
         private FileStream fs;
         private BinaryReader br;
 
@@ -173,15 +163,12 @@ namespace Potion
             iwiLoader = new IWILoader();
         }
 
-        public Material CreateMaterial( string materialName )
-        {
+        public Material CreateMaterial(string materialName) {
             Material ret = null;
 
-            using( fs = new FileStream( Utils.CoD2Path + "main\\materials\\" + materialName, FileMode.Open, FileAccess.Read ) )
-            {
-                using( br = new BinaryReader( fs, new ASCIIEncoding() ) )
-                {
-                    if( fs.CanRead )
+            using (fs = new FileStream(Utils.CoD2Path + "main\\materials\\" + materialName, FileMode.Open, FileAccess.Read)) {
+                using (br = new BinaryReader(fs, new ASCIIEncoding())) {
+                    if (fs.CanRead)
                         ret = StartReading();
                 }
             }
@@ -190,14 +177,13 @@ namespace Potion
             return ret;
         }
 
-        private Material StartReading()
-        {
+        private Material StartReading() {
             string materialName = GetMaterialName();
             string textureName = GetColorMapName();
 
             //Debug.Log( "Opening... " + textureName + " from material file " + materialName );
 
-            Texture2D tex = iwiLoader.CreateTexture( textureName );
+            Texture2D tex = iwiLoader.CreateTexture(textureName);
 
             Material ret = new Material( Resources.Load<Material>("main/Default") );
             ret.mainTexture = tex;
@@ -205,24 +191,22 @@ namespace Potion
             return ret;
         }
 
-        private string GetMaterialName()
-        {
+        private string GetMaterialName() {
             // DWORD 0 = Material name offset
-            br.BaseStream.Seek( 0, SeekOrigin.Begin );
+            br.BaseStream.Seek(0, SeekOrigin.Begin);
             uint offset = br.ReadUInt32();
 
-            br.BaseStream.Seek( offset, SeekOrigin.Begin );
-            return br.ReadStringTerminated( 0x00 );
+            br.BaseStream.Seek(offset, SeekOrigin.Begin);
+            return br.ReadStringTerminated(0x00);
         }
 
-        private string GetColorMapName()
-        {
+        private string GetColorMapName() {
             // DWORD 1 = Texture name offset
-            br.BaseStream.Seek( 4, SeekOrigin.Begin );
+            br.BaseStream.Seek(4, SeekOrigin.Begin);
             uint offset = br.ReadUInt32();
 
-            br.BaseStream.Seek( offset, SeekOrigin.Begin );
-            return br.ReadStringTerminated( 0x00 );
+            br.BaseStream.Seek(offset, SeekOrigin.Begin);
+            return br.ReadStringTerminated(0x00);
         }
     }
 }

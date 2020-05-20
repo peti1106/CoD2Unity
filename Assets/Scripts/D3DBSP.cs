@@ -59,8 +59,8 @@ namespace Potion {
 
         public Vector2 UVToVector2() {
             Vector2 _uv = new Vector2(
-                uv[ 0 ],
-                uv[ 1 ]
+                uv[0],
+                uv[1]
             );
 
             return _uv;
@@ -99,13 +99,12 @@ namespace Potion {
 
         MaterialCreator materialCreator;
 
-        void Start()
-        {
+        void Start() {
             Load();
         }
 
         void Load() {
-            lumpNames = new Dictionary<int, string>(){
+            lumpNames = new Dictionary<int, string>() {
                 { 0, "Materials" },
                 { 1, "Lightmaps" },
                 { 2, "Light Grid Hash" },
@@ -149,11 +148,9 @@ namespace Potion {
 
             materialCreator = new MaterialCreator();
 
-            using( fs = new FileStream( Utils.CoD2Path + "main\\maps\\mp\\mp_carentan.d3dbsp", FileMode.Open, FileAccess.Read ) ) 
-            {
-                using( br = new BinaryReader( fs, new ASCIIEncoding() ) ) 
-                {
-                    if( fs.CanRead )
+            using (fs = new FileStream(Utils.CoD2Path + "main\\maps\\mp\\mp_carentan.d3dbsp", FileMode.Open, FileAccess.Read)) {
+                using (br = new BinaryReader(fs, new ASCIIEncoding())) {
+                    if (fs.CanRead)
                         StartReading();
                 }
             }
@@ -162,12 +159,12 @@ namespace Potion {
         private void StartReading() {
             string ident = GetHeaderIdentifier();
 
-            string mapNameWithExt = fs.Name.Substring( fs.Name.LastIndexOf( '/' ) + 1 );
-            string mapName = mapNameWithExt.Substring( 0, mapNameWithExt.IndexOf( '.' ) );
+            string mapNameWithExt = fs.Name.Substring(fs.Name.LastIndexOf('/') + 1);
+            string mapName = mapNameWithExt.Substring(0, mapNameWithExt.IndexOf('.'));
 
-            Debug.Log( "File format " + ident + " has been detected on " + mapName );
+            Debug.Log("File format " + ident + " has been detected on " + mapName);
 
-            if( ident != "IBSP4" )
+            if (ident != "IBSP4")
                 return;
 
             FillLumpList();
@@ -176,29 +173,29 @@ namespace Potion {
         string GetHeaderIdentifier()
         {
             byte[] chunk;
-            chunk = br.ReadBytes( 5 );
+            chunk = br.ReadBytes(5);
 
             StringBuilder ident = new StringBuilder();
 
-            for( int i = 0; i < 4; i++ )
-            {
-                ident.Append( (char) chunk[ i ] );
+            for (int i = 0; i < 4; i++) {
+                ident.Append((char) chunk[i]);
             }
-            ident.Append( (int) chunk[ 4 ] );
+            ident.Append((int) chunk[4]);
 
             return ident.ToString();
         }
 
         private void FillLumpList() {
-            br.BaseStream.Seek( 8, SeekOrigin.Begin );
+            br.BaseStream.Seek(8, SeekOrigin.Begin);
 
-            for( int i = 0; i < 39; i++ ) {
+            for (int i = 0; i < 39; i++) {
                 string lumpName;
 
-                if( !lumpNames.ContainsKey( i ) )
+                if (!lumpNames.ContainsKey(i)) {
                     lumpName = "UNKNOWN";
-                else
+                } else {
                     lumpName = lumpNames[i];
+                }
 
                 Lump l = new Lump();
 
@@ -206,31 +203,31 @@ namespace Potion {
                 l.length = br.ReadUInt32();
                 l.offset = br.ReadUInt32();
 
-                lumps.Insert( i, l );
+                lumps.Insert(i, l);
 
-                Debug.Log( "Lump[" + l.name + "] Length: " + l.length + " bytes | Offset: " + l.offset + " bytes" );
+                Debug.Log("Lump[" + l.name + "] Length: " + l.length + " bytes | Offset: " + l.offset + " bytes");
             }
 
             CreateMeshMagic();
         }
 
         private void FillMaterialList() {
-            br.BaseStream.Seek( lumps[0].offset, SeekOrigin.Begin );
+            br.BaseStream.Seek(lumps[0].offset, SeekOrigin.Begin);
 
-            for( int i = 0; i < lumps[0].length; i++ ) {
+            for (int i = 0; i < lumps[0].length; i++) {
                 MapMaterial m = new MapMaterial();
 
-                m.name = Encoding.ASCII.GetString( br.ReadBytes( 64 ) ).Replace( "\0", string.Empty ).Trim();
+                m.name = Encoding.ASCII.GetString(br.ReadBytes(64)).Replace("\0", string.Empty).Trim();
                 m.flags = br.ReadInt64();
 
-                materials.Add( m );
+                materials.Add(m);
             }
         }
 
         void FillSoupsList() {
-            br.BaseStream.Seek( lumps[7].offset, SeekOrigin.Begin );
+            br.BaseStream.Seek(lumps[7].offset, SeekOrigin.Begin);
 
-            for( int i = 0; i < lumps[7].length / 16; i++ ) {
+            for (int i = 0; i < lumps[7].length / 16; i++) {
                 TriangleSoup t = new TriangleSoup();
 
                 t.materialID = br.ReadUInt16();
@@ -242,14 +239,14 @@ namespace Potion {
                 t.triangleLength = br.ReadUInt16();
                 t.triangleOffset = br.ReadUInt32();
 
-                triangleSoups.Add( t );
+                triangleSoups.Add(t);
             }
         }
 
         void FillVerticesList() {
-            br.BaseStream.Seek( lumps[8].offset, SeekOrigin.Begin );
+            br.BaseStream.Seek(lumps[8].offset, SeekOrigin.Begin);
 
-            for( int i = 0; i < lumps[8].length / 68; i++ ) {
+            for (int i = 0; i < lumps[8].length / 68; i++) {
                 Vertex v = new Vertex();
 
                 v.position[0] = br.ReadSingle();
@@ -272,23 +269,23 @@ namespace Potion {
                 v.st[1] = br.ReadSingle();
 
                 // Unknown.. skip. Texture rotation?
-                br.BaseStream.Seek( 24, SeekOrigin.Current );
+                br.BaseStream.Seek(24, SeekOrigin.Current);
 
-                vertices.Add( v );
+                vertices.Add(v);
             }
         }
 
         void FillTrianglesList() {
-            br.BaseStream.Seek( lumps[9].offset, SeekOrigin.Begin );
+            br.BaseStream.Seek(lumps[9].offset, SeekOrigin.Begin);
 
-            for( int i = 0; i < lumps[9].length / 6; i++ ) {
+            for (int i = 0; i < lumps[9].length / 6; i++) {
                 Triangle t = new Triangle();
 
                 t.indices[0] = br.ReadUInt16();
                 t.indices[1] = br.ReadUInt16();
                 t.indices[2] = br.ReadUInt16();
 
-                triangles.Add( t );
+                triangles.Add(t);
             }
         }
 
@@ -313,42 +310,39 @@ namespace Potion {
             // First you look up the current triangle
             // Then you use the index pointed to by the triangle, plus the vertex_offset, to find the correct vertex
 
-            for( int i = 0; i < this.triangleSoups.Count; i++ )
-            {
+            for (int i = 0; i < this.triangleSoups.Count; i++) {
                 TriangleSoup currentSoup = this.triangleSoups[i];
 
-                GameObject go = GameObject.CreatePrimitive( PrimitiveType.Cube );
+                GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 go.transform.parent = root.transform;
 
                 Mesh m = new Mesh();
                 go.GetComponent<MeshFilter>().mesh = m;
 
                 int tri_count = (int) currentSoup.triangleLength / 3;
-                for( int j = 0; j < tri_count; j++ )
-                {
+                
+                for (int j = 0; j < tri_count; j++) {
                     Triangle tri = this.triangles[(int) currentSoup.triangleOffset / 3 + j];
 
-                    for( int vert_loop = 0; vert_loop < 3; vert_loop++ )
-                    {
+                    for (int vert_loop = 0; vert_loop < 3; vert_loop++) {
                         int offset = (int) tri.indices[vert_loop];
 
                         Vector3 pos = this.vertices[(int) currentSoup.vertexOffset + offset].PositionToVector3();
-                        Vector2 uv = this.vertices[ (int) currentSoup.vertexOffset + offset ].UVToVector2();
+                        Vector2 uv = this.vertices[(int) currentSoup.vertexOffset + offset].UVToVector2();
 
-                        triangleIndices.Add( vertices.Count );
-                        vertices.Add( pos );
-                        uvs.Add( uv );
+                        triangleIndices.Add(vertices.Count);
+                        vertices.Add(pos);
+                        uvs.Add(uv);
                     }
                 }
 
-                if( vertices.Count > 0 )
-                {
+                if (vertices.Count > 0) {
                     // Load required material here
-                    Material newMat = materialCreator.CreateMaterial( materials[currentSoup.materialID].name );
+                    Material newMat = materialCreator.CreateMaterial(materials[currentSoup.materialID].name);
 
-                                                                     // noDraw
-                    if( ( materials[currentSoup.materialID].flags & 0x0000000100000080 ) == 0 )
-                        go.SetActive( false );
+                    // noDraw
+                    if ((materials[currentSoup.materialID].flags & 0x0000000100000080) == 0)
+                        go.SetActive(false);
 
                     go.GetComponent<Renderer>().material = newMat;
 
@@ -361,17 +355,14 @@ namespace Potion {
                     vertices.Clear();
                     triangleIndices.Clear();
                     uvs.Clear();
+                } else {
+                    Destroy(go);
                 }
-                else
-                {
-                    Destroy( go );
-                }
-
             }
 
-            root.transform.localScale = new Vector3( 0.1f, 0.1f, 0.1f );
+            root.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
 
-            Destroy( gameObject );
+            Destroy(gameObject);
         }
     }
 }
