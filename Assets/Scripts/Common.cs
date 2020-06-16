@@ -45,13 +45,7 @@ public static class Utils
 
     public static void ReadZipContentsToDictionaries()
     {
-        string fileCounterFormat = "00";
-        List<string> iwdNames = new List<string>();
-
-        for (int numbersOfIwds = 0; numbersOfIwds <= 15; numbersOfIwds++)
-        {
-            iwdNames.Add(Path.Combine(CoD2IwdPath, "iw_" + numbersOfIwds.ToString(fileCounterFormat) + ".iwd"));
-        }
+        string[] iwdNames = Directory.GetFiles(CoD2IwdPath, "*.iwd", SearchOption.TopDirectoryOnly);
 
         foreach (string iwdName in iwdNames)
         {
