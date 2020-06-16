@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
+using System.Threading.Tasks;
 
 public static class Utils
 {
@@ -47,7 +49,8 @@ public static class Utils
     {
         string[] iwdNames = Directory.GetFiles(CoD2IwdPath, "*.iwd", SearchOption.TopDirectoryOnly);
 
-        foreach (string iwdName in iwdNames)
+        // Old read method
+        /*foreach (string iwdName in iwdNames)
         {
             Debug.Log(iwdName);
             using (ZipArchive archive = ZipFile.OpenRead(iwdName))
@@ -61,12 +64,25 @@ public static class Utils
                     }
                 }
             }
-        }
-
-        /*foreach (KeyValuePair<string, ZipArchiveEntry> entry in maps)
-        {
-            Debug.Log(entry.Key);
         }*/
+
+        // Bug: if reads the users mod first which should modify the contents of the original iwds 
+        // than it might be overwrittem with the original ones, because the order is not the same 
+        // every time
+        Parallel.ForEach(iwdNames, (iwdName) =>
+        {
+            Debug.Log(iwdName);
+            using (ZipArchive archive = ZipFile.OpenRead(iwdName))
+            {
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    if (!string.IsNullOrEmpty(entry.Name))
+                    {
+                        AddEntryToDictionaryByType(entry);
+                    }
+                }
+            }
+        });
     }
 
     private static string GetFolderName(string entryFullName)
